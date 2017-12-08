@@ -2,132 +2,102 @@ field.addEventListener("click", addClassToCell);
 const values = ["ch", "r"];
 let currentClass = "ch";
 
-function ListOfMoves() {
-  this.length = 0;
-  this.head = null;
+var listOfMoves = [];
+let currentPosition;
+function clearAll() {
+  document.querySelectorAll('.row');
 }
-
-ListOfMoves.prototype = {
-  add: function(value) {
-    var node = {
-      value: value,
-      dataset: value.dataset,
-      next: null,
-      prev: null
-    };
-
-    if (this.length == 0) {
-      this.head = node;
-    } else {
-      this.head.next = node;
-      node.prev = this.head;
-      this.head = node;
-    }
-    this.length++;
-  },
-
-  getByValue: function(value) {
-    var node = this.head;
-    var i = 0;
-
-    while (i++ < this.length) {
-      if (node.value === value) {
-        return node;
-      }
-      node = node.prev;
-    }
-
-    return null;
-  },
-
-  displayNode: function(node) {
-    if (node != null) {
-      console.log("value = " + node.value);
-      console.log("prev = " + (node.prev != null ? node.prev.value : "null"));
-      console.log("next = " + (node.next != null ? node.next.value : "null"));
-      console.log("--------------");
-      return;
-    }
-  },
-
-  removeByValue: function(value) {
-    var node = this.getByValue(value);
-    var i = 0;
-
-    if (node.value === value) {
-      if (node.prev !== null && node.next !== null) {
-        node.next.prev = node.prev;
-        node.prev.next = node.next;
-        delete node;
-      } else if (node.prev === null && node.next !== null) {
-        node.next.prev = null;
-        delete node;
-      } else if (node.next === null && node.prev !== null) {
-        node.prev.next = null;
-        this.head = node.prev;
-        node.prev = null;
-        delete node;
-      } else {
-        this.head = null;
-      }
-    }
-    this.length--;
-    return;
-  }
-};
-
-// doublyLinkedList.add(addClassToCell);
-var listOfMoves = new ListOfMoves();
-// doublyLinkedList.add(6);
 
 function addClassToCell(event) {
   if (event.target.classList.contains("cell")) {
     event.target.classList.add(currentClass);
+    // write current element to list
+    listOfMoves.push({
+      id: event.target.dataset.id,
+      class: currentClass
+    });
+    currentPosition = listOfMoves.length - 1;
     currentClass = values.filter(function(item) {
       return item !== currentClass;
     })[0];
 
-    listOfMoves.add(event.target);
-    // console.log(listOfMoves);
     checkUndoAvailable();
   }
-  // return event.target;
 }
 
-function checkUndoAvailable() {
+function redoAvailable() {
   const undoBtn = document.querySelector('.undo-btn');
-  if(listOfMoves.length != 0) {
+  // if(listOfMoves.length != 0) {
     undoBtn.removeAttribute('disabled');
-    undoBtn.addEventListener('click', undoMove);
-  }
-  // } else if(listOfMoves.head.prev == null) {
-  //   undoBtn.setAttribute('disabled', true);
   // }
 }
 
-function checkRedoAvailable() {
+function undoAvailable() {
   const redoBtn = document.querySelector('.redo-btn');
+  redoBtn.removeAttribute('disabled');
 
 }
 
-function undoMove() {
-  let currentMove = listOfMoves.head.value;
-  // let currentCell = document.querySelector(listOfMoves.head.value);
-  if(currentMove.classList.contains('ch')) {
-  // const currentMove = 
-    currentMove.classList.remove('ch');
-  } else if (currentMove.classList.contains('r')) {
-    currentMove.classList.remove('r');
-  }
+document.querySelector('.undo-btn').addEventListener('click', undoAvailable);
+document.querySelector('.redo-btn').addEventListener('click', redoAvailable);
 
-  if (listOfMoves.head.prev !== null) {
-    listOfMoves.head = listOfMoves.head.prev;
+
+function checkUndoAvailable() {
+   if(listOfMoves.length != 0) {
+  const undoBtn = document.querySelector('.undo-btn');
+      undoBtn.removeAttribute('disabled');
+   }
+}
+
+function undoRedo(event) {
+  // let currentPosition = listOfMoves.length-1;
+  // console.log(currentPosition);
+  // console.log(currentElementMove);
+  if(event.target.classList.contains('undo-btn')) {
+    let currentElementMove = document.querySelector('#c-'+ listOfMoves[currentPosition].id);
+    // code to undo moves
+    currentElementMove.classList.remove(listOfMoves[currentPosition].class);
+    if(currentPosition != 0) {
+      currentPosition -= 1;
+      // event.target.removeAttribute('disabled');
+    } else {
+      currentPosition = 0;
+      event.target.setAttribute('disabled', true);
+    }
+    console.log(listOfMoves[currentPosition].class);
+    console.log(currentPosition);
+    console.log(listOfMoves);
   } else {
-    const undoBtn = document.querySelector('.undo-btn');
-    undoBtn.setAttribute('disabled', true);
+    // code to redo moves
+    if (currentPosition == listOfMoves.length-1) {
+      currentElementMove = document.querySelector('#c-'+ listOfMoves[currentPosition].id);
+      currentElementMove.classList.add(listOfMoves[currentPosition].class);
+      document.querySelector('.redo-btn').setAttribute('disabled', true);
+      currentPosition = listOfMoves.length-1;
+      // currentPosition+=1;
+    } else {
+      currentElementMove = document.querySelector('#c-'+ listOfMoves[currentPosition].id);
+      currentElementMove.classList.add(listOfMoves[currentPosition].class);
+      currentPosition+=1; 
+    }
   }
-  // listOfMoves.prev;
-  console.log((listOfMoves.head.value));
-  console.log(listOfMoves.head.dataset);
-  console.log(document.querySelector('#c-' + listOfMoves.head.dataset.id));
 }
+
+// console.log(buttons);
+function addListenersToButtons() {
+  const buttonsList = document.querySelectorAll('.btn');
+  for (let i = 0; i < buttonsList.length; i++) {
+    if(buttonsList[i].classList.contains('undo-btn') || buttonsList[i].classList.contains('redo-btn')) {
+      buttonsList[i].addEventListener('click', undoRedo);
+    } else if(buttonsList[i].classList.contains('restart-btn')) {
+      // function to clear listOfMoves and field
+    }
+
+  }
+}
+
+addListenersToButtons();
+
+// buttonsList.forEach(function(element){
+//   element.addEventListener('click', undoRedo);
+// });
