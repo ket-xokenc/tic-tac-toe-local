@@ -17,23 +17,27 @@ function addClassToCell(event) {
       class: currentClass
     });
     currentPosition = listOfMoves.length - 1;
-    // currentPosition = undoRedo();
-    currentClass = values.filter(function(item) {
-      return item !== currentClass;
-    })[0];
-
-    // console.log(currentPosition);
-    // console.log(listOfMoves);
+    currentClass = checkMoveClass(); 
     checkUndoAvailable();
-    checkRedoAvailable(); 
+    checkRedoAvailable();
   }
+}
+
+function checkMoveClass() {
+  if (currentPosition != -1) {
+    let lastMoveClass = listOfMoves[currentPosition].class;
+    currentClass = values.filter(function(element) {
+      return element != lastMoveClass;
+    });
+  } else {
+    currentClass = 'ch';
+  }
+  return currentClass;
 }
 
 function redoAvailable() {
   const undoBtn = document.querySelector(".undo-btn");
-  // if(listOfMoves.length != 0) {
   undoBtn.removeAttribute("disabled");
-  // }
 }
 
 function undoAvailable() {
@@ -75,6 +79,9 @@ function undoRedo(event) {
       currentPosition = -1;
       event.target.setAttribute("disabled", true);
     }
+    // currentClass = checkMoveClass(); 
+    // debugger;
+    // console.log(currentPosition);
   } else {
     // code to redo moves
     if (currentPosition == listOfMoves.length - 1) {
@@ -100,9 +107,12 @@ function undoRedo(event) {
       );
       currentElementMove.classList.add(listOfMoves[currentPosition].class);
     }
-    // checkRedoAvailable(); 
+    currentClass = checkMoveClass(); 
+    
+    checkRedoAvailable(); 
   }
-  // return currentPosition;
+  currentClass = checkMoveClass(); 
+  
 }
 
 // console.log(buttons);
