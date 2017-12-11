@@ -1,28 +1,31 @@
-field.addEventListener("click", addClassToCell);
+document.querySelector('.field').addEventListener("click", addClassToCell);
 const values = ["ch", "r"];
 let currentClass = "ch";
 
 var listOfMoves = [];
-let currentPosition;
-function clearAll() {
-  document.querySelectorAll(".row");
-}
+let currentPosition = -1;
+// function clearAll() {
+//   document.querySelectorAll(".row");
+// }
 
 function addClassToCell(event) {
   if (event.target.classList.contains("cell")) {
     event.target.classList.add(currentClass);
     // write current element to list
-    listOfMoves.push({
+    listOfMoves[currentPosition+1] = ({
       id: event.target.dataset.id,
       class: currentClass
     });
     currentPosition = listOfMoves.length - 1;
+    // currentPosition = undoRedo();
     currentClass = values.filter(function(item) {
       return item !== currentClass;
     })[0];
 
+    // console.log(currentPosition);
+    // console.log(listOfMoves);
     checkUndoAvailable();
-    // checkRedoAvailable(); 
+    checkRedoAvailable(); 
   }
 }
 
@@ -97,8 +100,9 @@ function undoRedo(event) {
       );
       currentElementMove.classList.add(listOfMoves[currentPosition].class);
     }
-    checkRedoAvailable(); 
+    // checkRedoAvailable(); 
   }
+  // return currentPosition;
 }
 
 // console.log(buttons);
