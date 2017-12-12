@@ -1,4 +1,4 @@
-document.querySelector('.field').addEventListener("click", addClassToCell);
+document.querySelector(".field").addEventListener("click", addClassToCell);
 const values = ["ch", "r"];
 let currentClass = "ch";
 
@@ -9,13 +9,13 @@ function addClassToCell(event) {
   if (event.target.classList.contains("cell")) {
     event.target.classList.add(currentClass);
     // write current element to list
-    listOfMoves[currentPosition+1] = ({
+    listOfMoves[currentPosition + 1] = {
       id: event.target.dataset.id,
       class: currentClass
-    });
+    };
     checkWinner(currentClass);
     currentPosition = listOfMoves.length - 1;
-    currentClass = checkMoveClass(); 
+    currentClass = checkMoveClass();
     checkUndoAvailable();
     checkRedoAvailable();
     console.log(listOfMoves);
@@ -29,7 +29,7 @@ function checkMoveClass() {
       return element != lastMoveClass;
     })[0];
   } else {
-    currentClass = 'ch';
+    currentClass = "ch";
   }
   return currentClass;
 }
@@ -63,7 +63,7 @@ function checkUndoAvailable() {
 }
 
 function checkRedoAvailable() {
-  if (currentPosition == listOfMoves.length -1) {
+  if (currentPosition == listOfMoves.length - 1) {
     const redoBtn = document.querySelector(".redo-btn");
     redoBtn.setAttribute("disabled", true);
   }
@@ -111,12 +111,11 @@ function undoRedo(event) {
       );
       currentElementMove.classList.add(listOfMoves[currentPosition].class);
     }
-    currentClass = checkMoveClass(); 
-    
-    checkRedoAvailable(); 
+    currentClass = checkMoveClass();
+
+    checkRedoAvailable();
   }
-  currentClass = checkMoveClass(); 
-  
+  currentClass = checkMoveClass();
 }
 
 // console.log(buttons);
@@ -130,7 +129,7 @@ function addListenersToButtons() {
       buttonsList[i].addEventListener("click", undoRedo);
     } else if (buttonsList[i].classList.contains("restart-btn")) {
       // function to clear listOfMoves and field
-      buttonsList[i].addEventListener('click', restartGame);
+      buttonsList[i].addEventListener("click", restartGame);
     }
   }
 }
@@ -138,9 +137,9 @@ function addListenersToButtons() {
 function restartGame() {
   listOfMoves = [];
   currentPosition = -1;
-  const cellsList = document.querySelectorAll('.cell');
-  cellsList.forEach(element => element.classList.remove('ch', 'r'));
-  document.querySelector('.won-title').classList.add('hidden');
+  const cellsList = document.querySelectorAll(".cell");
+  cellsList.forEach(element => element.className = 'cell');
+  document.querySelector(".won-title").classList.add("hidden");
   checkMoveClass();
   checkUndoAvailable();
 }
@@ -148,17 +147,28 @@ function restartGame() {
 addListenersToButtons();
 
 function checkWinner(currentClass) {
-  const winArray = ['012','345','678','036','147','258','048','246'];
-  const cellsList = document.querySelectorAll('.cell');
-  for (let i = 0; i < winArray.length; i++) {
-    let first = winArray[i].substr(0,1);
-    let second = winArray[i].substr(1,1);
-    let third = winArray[i].substr(2,1);
+  const winObj = [
+    { indexes: "012", direction: "horizontal" },
+    { indexes: "345", direction: "horizontal" },
+    { indexes: "678", direction: "horizontal" },
+    { indexes: "036", direction: "vertical" },
+    { indexes: "147", direction: "vertical" },
+    { indexes: "258", direction: "vertical" },
+    { indexes: "048", direction: "diagonal-right" },
+    { indexes: "246", direction: "diagonal-left" }
+  ];
+
+  const winArray = ["012", "345", "678", "036", "147", "258", "048", "246"];
+  const cellsList = document.querySelectorAll(".cell");
+  
+  // winObj.forEach(element => console.log(element.indexes));
+
+  winObj.forEach(function(element) {
+    let first = element.indexes.substr(0, 1);
+    let second = element.indexes.substr(1, 1);
+    let third = element.indexes.substr(2, 1)
     let firstEl, secondEl, thirdEl;
-// переделать. мне не нравится
-// переделать. мне не нравится
-// переделать. мне не нравится
-// переделать. мне не нравится
+
     listOfMoves.forEach(function(element) {
       if (element.id == +first && element.class == currentClass) {
         firstEl = element;
@@ -173,9 +183,9 @@ function checkWinner(currentClass) {
       if (element.id == +third && element.class == currentClass) {
         thirdEl = element;
       }
-    });
 
-    if(listOfMoves.length == cellsList.length) {
+    });
+    if (listOfMoves.length == cellsList.length) {
       if (firstEl && secondEl && thirdEl) {
         // maybe disable undo-redo and cells for moves
         showWonMessage(currentClass);
@@ -186,24 +196,84 @@ function checkWinner(currentClass) {
       if (firstEl && secondEl && thirdEl) {
         // maybe disable undo-redo and cells for moves
         showWonMessage(currentClass);
+        checkCellsForWon(firstEl, secondEl, thirdEl, element.direction);
       }
     }
-  }
+    // console.log(first);
+  });
+
+  // const cellsList = document.querySelectorAll(".cell");
+  // // console.log(typeof(winObj));
+  // for (let i = 0; i < winArray.length; i++) {
+  //   let first = winArray[i].substr(0, 1);
+  //   let second = winArray[i].substr(1, 1);
+  //   let third = winArray[i].substr(2, 1);
+  //   let firstEl, secondEl, thirdEl;
+  //   // переделать. мне не нравится
+  //   // переделать. мне не нравится
+  //   // переделать. мне не нравится
+  //   // переделать. мне не нравится
+  //   listOfMoves.forEach(function(element) {
+  //     if (element.id == +first && element.class == currentClass) {
+  //       firstEl = element;
+  //     }
+  //   });
+  //   listOfMoves.forEach(function(element) {
+  //     if (element.id == +second && element.class == currentClass) {
+  //       secondEl = element;
+  //     }
+  //   });
+  //   listOfMoves.forEach(function(element) {
+  //     if (element.id == +third && element.class == currentClass) {
+  //       thirdEl = element;
+  //     }
+
+    
+  //   });
+
+  //   if (listOfMoves.length == cellsList.length) {
+  //     if (firstEl && secondEl && thirdEl) {
+  //       // maybe disable undo-redo and cells for moves
+  //       showWonMessage(currentClass);
+  //     } else {
+  //       showWonMessage();
+  //     }
+  //   } else {
+  //     if (firstEl && secondEl && thirdEl) {
+  //       // maybe disable undo-redo and cells for moves
+  //       showWonMessage(currentClass);
+  //       checkCellsForWon(firstEl, secondEl, thirdEl);
+  //     }
+  //   }
+  // }
+  // проверить по ходу направление выигрыша
+}
 
 function showWonMessage(currentClass) {
-  document.querySelector('.won-title').classList.remove('hidden');
-  let wonMessage = document.querySelector('.won-message');
+  document.querySelector(".won-title").classList.remove("hidden");
+  let wonMessage = document.querySelector(".won-message");
   switch (currentClass) {
-    case 'ch':
-      wonMessage.innerHTML = 'Crosses won!';
+    case "ch":
+      wonMessage.innerHTML = "Crosses won!";
       break;
-    case 'r':
-      wonMessage.innerHTML = 'Toes won!';
+    case "r":
+      wonMessage.innerHTML = "Toes won!";
       break;
-    default: 
+    default:
       wonMessage.innerHTML = "It's a draw!";
       break;
   }
 }
-// проверить по ходу направление выигрыша
+
+function checkCellsForWon(first, second, third, direction) {
+  let cellsList = document.querySelectorAll(".cell");
+  cellsList.forEach(function(element) {
+    if (
+      element.dataset.id == first.id ||
+      element.dataset.id == second.id ||
+      element.dataset.id == third.id
+    ) {
+      element.classList.add("win", direction);
+    }
+  });
 }
