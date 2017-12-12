@@ -18,7 +18,9 @@ function addClassToCell(event) {
     currentClass = checkMoveClass();
     checkUndoAvailable();
     checkRedoAvailable();
-    console.log(listOfMoves);
+    localStorage.setItem("listOfMoves", JSON.stringify(listOfMoves)); 
+    // console.log(listOfMoves);
+    // saveMovesToStorage();
   }
 }
 
@@ -116,9 +118,11 @@ function undoRedo(event) {
     checkRedoAvailable();
   }
   currentClass = checkMoveClass();
+  // console.log(currentPosition);
+  // localStorage.setItem("listOfMoves", JSON.stringify(listOfMoves));
+  saveMovesToStorage();
 }
 
-// console.log(buttons);
 function addListenersToButtons() {
   const buttonsList = document.querySelectorAll(".btn");
   for (let i = 0; i < buttonsList.length; i++) {
@@ -142,6 +146,7 @@ function restartGame() {
   document.querySelector(".won-title").classList.add("hidden");
   checkMoveClass();
   checkUndoAvailable();
+  localStorage.clear();
 }
 
 addListenersToButtons();
@@ -168,7 +173,10 @@ function checkWinner(currentClass) {
     let second = element.indexes.substr(1, 1);
     let third = element.indexes.substr(2, 1)
     let firstEl, secondEl, thirdEl;
-
+    // переделать. мне не нравится
+    // переделать. мне не нравится
+    // переделать. мне не нравится
+    // переделать. мне не нравится
     listOfMoves.forEach(function(element) {
       if (element.id == +first && element.class == currentClass) {
         firstEl = element;
@@ -201,52 +209,6 @@ function checkWinner(currentClass) {
     }
     // console.log(first);
   });
-
-  // const cellsList = document.querySelectorAll(".cell");
-  // // console.log(typeof(winObj));
-  // for (let i = 0; i < winArray.length; i++) {
-  //   let first = winArray[i].substr(0, 1);
-  //   let second = winArray[i].substr(1, 1);
-  //   let third = winArray[i].substr(2, 1);
-  //   let firstEl, secondEl, thirdEl;
-  //   // переделать. мне не нравится
-  //   // переделать. мне не нравится
-  //   // переделать. мне не нравится
-  //   // переделать. мне не нравится
-  //   listOfMoves.forEach(function(element) {
-  //     if (element.id == +first && element.class == currentClass) {
-  //       firstEl = element;
-  //     }
-  //   });
-  //   listOfMoves.forEach(function(element) {
-  //     if (element.id == +second && element.class == currentClass) {
-  //       secondEl = element;
-  //     }
-  //   });
-  //   listOfMoves.forEach(function(element) {
-  //     if (element.id == +third && element.class == currentClass) {
-  //       thirdEl = element;
-  //     }
-
-    
-  //   });
-
-  //   if (listOfMoves.length == cellsList.length) {
-  //     if (firstEl && secondEl && thirdEl) {
-  //       // maybe disable undo-redo and cells for moves
-  //       showWonMessage(currentClass);
-  //     } else {
-  //       showWonMessage();
-  //     }
-  //   } else {
-  //     if (firstEl && secondEl && thirdEl) {
-  //       // maybe disable undo-redo and cells for moves
-  //       showWonMessage(currentClass);
-  //       checkCellsForWon(firstEl, secondEl, thirdEl);
-  //     }
-  //   }
-  // }
-  // проверить по ходу направление выигрыша
 }
 
 function showWonMessage(currentClass) {
@@ -276,4 +238,41 @@ function checkCellsForWon(first, second, third, direction) {
       element.classList.add("win", direction);
     }
   });
+}
+
+function saveMovesToStorage() {
+  let newListOfMoves = listOfMoves.slice(0, currentPosition+1);
+  localStorage.setItem("listOfMoves", JSON.stringify(newListOfMoves)); 
+  // console.log(newListOfMoves);
+  // console.log(listOfMoves);
+  //сериализуем его
+  // var serialObj = JSON.stringify(listOfMoves); 
+  //запишем его в хранилище по ключу "myKey"
+  
+  //спарсим его обратно объект
+  // var returnObj = JSON.parse(localStorage.getItem("listOfMoves")) 
+  // console.log(returnObj);
+}
+
+//очищаем все хранилище, когда игра закончилась
+// localStorage.clear()
+
+document.addEventListener("DOMContentLoaded", restoreGame);
+
+function restoreGame() {
+  listOfMoves = JSON.parse(localStorage.getItem("listOfMoves"));
+  let cellsList = document.querySelectorAll('.cell');
+  // cellsList.forEach(function(element) {
+  //   if(element.dataset.id == )
+  // });
+
+  for(let i = 0; i < listOfMoves.length; i++) {
+    cellsList.forEach(function(element) {
+      if(element.dataset.id == listOfMoves[i].id) {
+        element.classList.add(listOfMoves[i].class);
+      }
+    });
+  }
+  currentPosition = listOfMoves.length - 1;
+  currentClass = checkMoveClass();
 }
