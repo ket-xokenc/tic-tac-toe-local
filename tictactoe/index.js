@@ -1,5 +1,5 @@
 document.querySelector(".field").addEventListener("click", addClassToCell);
-const values = ["ch", "r"];
+const classesForMove = ["ch", "r"];
 let currentClass = "ch";
 
 var listOfMoves = [];
@@ -7,49 +7,51 @@ let currentPosition = -1;
 
 function addClassToCell(event) {
   if (event.target.classList.contains("cell")) {
+    // add class to cell
     event.target.classList.add(currentClass);
-    // write current element to list
+    // write move {id : '0', class: 'ch'}
     listOfMoves[currentPosition + 1] = {
       id: event.target.dataset.id,
       class: currentClass
     };
-    // currentPosition = listOfMoves.length - 1;
-    currentPosition +=1;
+    currentPosition += 1;
+    // save move to localStorage
     saveMovesToStorage();
+    // check current move for win
     checkWinner(currentClass);
+    // change class to next
     currentClass = checkMoveClass();
+    // check available buttons undo, redo
     checkRedoAvailable();
     checkUndoAvailable();
-    // localStorage.setItem("listOfMoves", JSON.stringify(listOfMoves));
-    // console.log(listOfMoves);
-    // saveMovesToStorage();
   }
 }
 
 function checkMoveClass() {
   if (currentPosition != -1) {
     let lastMoveClass = listOfMoves[currentPosition].class;
-    currentClass = values.filter(function(element) {
+    currentClass = classesForMove.filter(function(element) {
       return element != lastMoveClass;
     })[0];
   } else {
+    // начинаем всегда с крестика
     currentClass = "ch";
   }
   return currentClass;
 }
 
-function redoAvailable() {
+function undoAvailable() {
   const undoBtn = document.querySelector(".undo-btn");
   undoBtn.removeAttribute("disabled");
 }
 
-function undoAvailable() {
+function redoAvailable() {
   const redoBtn = document.querySelector(".redo-btn");
   redoBtn.removeAttribute("disabled");
 }
 
-document.querySelector(".undo-btn").addEventListener("click", undoAvailable);
-document.querySelector(".redo-btn").addEventListener("click", redoAvailable);
+document.querySelector(".undo-btn").addEventListener("click", redoAvailable);
+document.querySelector(".redo-btn").addEventListener("click", undoAvailable);
 
 function checkUndoAvailable() {
   const undoBtn = document.querySelector(".undo-btn");
@@ -67,7 +69,7 @@ function checkUndoAvailable() {
 }
 
 function checkRedoAvailable() {
-  if (currentPosition == (listOfMoves.length - 1)) {
+  if (currentPosition == listOfMoves.length - 1) {
     const redoBtn = document.querySelector(".redo-btn");
     redoBtn.setAttribute("disabled", true);
   }
@@ -90,6 +92,8 @@ function undoRedo(event) {
       currentPosition = -1;
       event.target.setAttribute("disabled", true);
     }
+    console.log(currentPosition);
+    console.log(listOfMoves);
   } else {
     // code to redo moves
     if (currentPosition == listOfMoves.length - 1) {
@@ -119,6 +123,7 @@ function undoRedo(event) {
     // saveMovesToStorage();
     // saveMovesToStorage();
     // console.log(currentPosition);
+    // console.log(listOfMoves);
     checkRedoAvailable();
   }
   currentClass = checkMoveClass();
@@ -127,18 +132,12 @@ function undoRedo(event) {
 }
 
 function addListenersToButtons() {
-  const buttonsList = document.querySelectorAll(".btn");
-  for (let i = 0; i < buttonsList.length; i++) {
-    if (
-      buttonsList[i].classList.contains("undo-btn") ||
-      buttonsList[i].classList.contains("redo-btn")
-    ) {
-      buttonsList[i].addEventListener("click", undoRedo);
-    } else if (buttonsList[i].classList.contains("restart-btn")) {
-      // function to clear listOfMoves and field
-      buttonsList[i].addEventListener("click", restartGame);
-    }
-  }
+  const undoBtn = document.querySelector('.undo-btn');
+  const redoBtn = document.querySelector('.redo-btn');
+  const restartBtn = document.querySelector('.restart-btn');
+  undoBtn.addEventListener('click', undoRedo);
+  redoBtn.addEventListener('click', undoRedo);
+  restartBtn.addEventListener('click', restartGame);
 }
 
 function restartGame() {
@@ -155,7 +154,11 @@ function restartGame() {
 addListenersToButtons();
 
 function checkWinner(currentClass) {
-  let currentClassMoves = JSON.parse(localStorage.getItem('listOfMoves')).filter(el => { return el.class == currentClass; });
+  let currentClassMoves = JSON.parse(
+    localStorage.getItem("listOfMoves")
+  ).filter(el => {
+    return el.class == currentClass;
+  });
   const winObj = [
     { indexes: "012", direction: "horizontal" },
     { indexes: "345", direction: "horizontal" },
@@ -167,24 +170,19 @@ function checkWinner(currentClass) {
     { indexes: "246", direction: "diagonal-left" }
   ];
   winObj.some(function(element) {
-    let arr = currentClassMoves.filter(function(move){
-      return move.id == element.indexes[0] || move.id == element.indexes[1] || move.id == element.indexes[2];
-      });
-      if (arr.length == 3) {
-        showWonMessage(currentClass);
-        checkCellsForWon(arr, element.direction);
-        // document.querySelector(".undo-btn").setAttribute('disabled', true);
-        // console.log(document.querySelector(".undo-btn"));
-        localStorage.clear();
-        return true;
-      } else if (arr.length != 3 && listOfMoves.length == 9) {
-        showWonMessage();
-        localStorage.clear();
-  
-        // console.log(arr);
-      }
+    let arr = currentClassMoves.filter(function(move) {
+      return element.indexes.includes(move.id);
+    });
+    if (arr.length == element.indexes.length) {
+      showWonMessage(currentClass);
+      checkCellsForWon(arr, element.direction);
+      localStorage.clear();
+      return true;
+    } else if (arr.length != 3 && listOfMoves.length == 9) {
+      showWonMessage();
+      localStorage.clear();
     }
-  );
+  });
 }
 
 function showWonMessage(currentClass) {
@@ -207,9 +205,9 @@ function checkCellsForWon(arr, direction) {
   let cellsList = document.querySelectorAll(".cell");
   cellsList.forEach(function(element) {
     if (
-      element.dataset.id == arr[0].id ||
-      element.dataset.id == arr[1].id ||
-      element.dataset.id == arr[2].id
+      arr.some(function(el) {
+        return el.id == element.dataset.id;
+      })
     ) {
       element.classList.add("win", direction);
     }
