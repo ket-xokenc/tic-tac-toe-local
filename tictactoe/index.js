@@ -13,12 +13,14 @@ function addClassToCell(event) {
       id: event.target.dataset.id,
       class: currentClass
     };
+    // currentPosition = listOfMoves.length - 1;
+    currentPosition +=1;
+    saveMovesToStorage();
     checkWinner(currentClass);
-    currentPosition = listOfMoves.length - 1;
     currentClass = checkMoveClass();
-    checkUndoAvailable();
     checkRedoAvailable();
-    localStorage.setItem("listOfMoves", JSON.stringify(listOfMoves)); 
+    checkUndoAvailable();
+    // localStorage.setItem("listOfMoves", JSON.stringify(listOfMoves));
     // console.log(listOfMoves);
     // saveMovesToStorage();
   }
@@ -65,7 +67,7 @@ function checkUndoAvailable() {
 }
 
 function checkRedoAvailable() {
-  if (currentPosition == listOfMoves.length - 1) {
+  if (currentPosition == (listOfMoves.length - 1)) {
     const redoBtn = document.querySelector(".redo-btn");
     redoBtn.setAttribute("disabled", true);
   }
@@ -108,17 +110,18 @@ function undoRedo(event) {
       currentElementMove = document.querySelector(
         "#c-" + listOfMoves[currentPosition].id
       );
-      currentElementMove = document.querySelector(
-        "#c-" + listOfMoves[currentPosition].id
-      );
+      // currentElementMove = document.querySelector(
+      //   "#c-" + listOfMoves[currentPosition].id
+      // );
       currentElementMove.classList.add(listOfMoves[currentPosition].class);
     }
     currentClass = checkMoveClass();
-
+    // saveMovesToStorage();
+    // saveMovesToStorage();
+    // console.log(currentPosition);
     checkRedoAvailable();
   }
   currentClass = checkMoveClass();
-  // console.log(currentPosition);
   // localStorage.setItem("listOfMoves", JSON.stringify(listOfMoves));
   saveMovesToStorage();
 }
@@ -142,7 +145,7 @@ function restartGame() {
   listOfMoves = [];
   currentPosition = -1;
   const cellsList = document.querySelectorAll(".cell");
-  cellsList.forEach(element => element.className = 'cell');
+  cellsList.forEach(element => (element.className = "cell"));
   document.querySelector(".won-title").classList.add("hidden");
   checkMoveClass();
   checkUndoAvailable();
@@ -152,6 +155,7 @@ function restartGame() {
 addListenersToButtons();
 
 function checkWinner(currentClass) {
+  let currentClassMoves = JSON.parse(localStorage.getItem('listOfMoves')).filter(el => { return el.class == currentClass; });
   const winObj = [
     { indexes: "012", direction: "horizontal" },
     { indexes: "345", direction: "horizontal" },
@@ -162,53 +166,25 @@ function checkWinner(currentClass) {
     { indexes: "048", direction: "diagonal-right" },
     { indexes: "246", direction: "diagonal-left" }
   ];
-
-  const winArray = ["012", "345", "678", "036", "147", "258", "048", "246"];
-  const cellsList = document.querySelectorAll(".cell");
-  
-  // winObj.forEach(element => console.log(element.indexes));
-
-  winObj.forEach(function(element) {
-    let first = element.indexes.substr(0, 1);
-    let second = element.indexes.substr(1, 1);
-    let third = element.indexes.substr(2, 1)
-    let firstEl, secondEl, thirdEl;
-    // переделать. мне не нравится
-    // переделать. мне не нравится
-    // переделать. мне не нравится
-    // переделать. мне не нравится
-    listOfMoves.forEach(function(element) {
-      if (element.id == +first && element.class == currentClass) {
-        firstEl = element;
-      }
-    });
-    listOfMoves.forEach(function(element) {
-      if (element.id == +second && element.class == currentClass) {
-        secondEl = element;
-      }
-    });
-    listOfMoves.forEach(function(element) {
-      if (element.id == +third && element.class == currentClass) {
-        thirdEl = element;
-      }
-
-    });
-    if (listOfMoves.length == cellsList.length) {
-      if (firstEl && secondEl && thirdEl) {
-        // maybe disable undo-redo and cells for moves
+  winObj.some(function(element) {
+    let arr = currentClassMoves.filter(function(move){
+      return move.id == element.indexes[0] || move.id == element.indexes[1] || move.id == element.indexes[2];
+      });
+      if (arr.length == 3) {
         showWonMessage(currentClass);
-      } else {
+        checkCellsForWon(arr, element.direction);
+        // document.querySelector(".undo-btn").setAttribute('disabled', true);
+        // console.log(document.querySelector(".undo-btn"));
+        localStorage.clear();
+        return true;
+      } else if (arr.length != 3 && listOfMoves.length == 9) {
         showWonMessage();
-      }
-    } else {
-      if (firstEl && secondEl && thirdEl) {
-        // maybe disable undo-redo and cells for moves
-        showWonMessage(currentClass);
-        checkCellsForWon(firstEl, secondEl, thirdEl, element.direction);
+        localStorage.clear();
+  
+        // console.log(arr);
       }
     }
-    // console.log(first);
-  });
+  );
 }
 
 function showWonMessage(currentClass) {
@@ -227,13 +203,13 @@ function showWonMessage(currentClass) {
   }
 }
 
-function checkCellsForWon(first, second, third, direction) {
+function checkCellsForWon(arr, direction) {
   let cellsList = document.querySelectorAll(".cell");
   cellsList.forEach(function(element) {
     if (
-      element.dataset.id == first.id ||
-      element.dataset.id == second.id ||
-      element.dataset.id == third.id
+      element.dataset.id == arr[0].id ||
+      element.dataset.id == arr[1].id ||
+      element.dataset.id == arr[2].id
     ) {
       element.classList.add("win", direction);
     }
@@ -241,17 +217,9 @@ function checkCellsForWon(first, second, third, direction) {
 }
 
 function saveMovesToStorage() {
-  let newListOfMoves = listOfMoves.slice(0, currentPosition+1);
-  localStorage.setItem("listOfMoves", JSON.stringify(newListOfMoves)); 
-  // console.log(newListOfMoves);
-  // console.log(listOfMoves);
-  //сериализуем его
-  // var serialObj = JSON.stringify(listOfMoves); 
-  //запишем его в хранилище по ключу "myKey"
-  
-  //спарсим его обратно объект
-  // var returnObj = JSON.parse(localStorage.getItem("listOfMoves")) 
-  // console.log(returnObj);
+  let newListOfMoves = listOfMoves.slice(0, currentPosition + 1);
+  //запишем его в хранилище по ключу "listOfMoves"
+  localStorage.setItem("listOfMoves", JSON.stringify(newListOfMoves));
 }
 
 //очищаем все хранилище, когда игра закончилась
@@ -261,14 +229,11 @@ document.addEventListener("DOMContentLoaded", restoreGame);
 
 function restoreGame() {
   listOfMoves = JSON.parse(localStorage.getItem("listOfMoves"));
-  let cellsList = document.querySelectorAll('.cell');
-  // cellsList.forEach(function(element) {
-  //   if(element.dataset.id == )
-  // });
+  let cellsList = document.querySelectorAll(".cell");
 
-  for(let i = 0; i < listOfMoves.length; i++) {
+  for (let i = 0; i < listOfMoves.length; i++) {
     cellsList.forEach(function(element) {
-      if(element.dataset.id == listOfMoves[i].id) {
+      if (element.dataset.id == listOfMoves[i].id) {
         element.classList.add(listOfMoves[i].class);
       }
     });
