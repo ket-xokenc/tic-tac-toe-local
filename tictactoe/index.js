@@ -9,6 +9,7 @@ function addClassToCell(event) {
   if (event.target.classList.contains("cell")) {
     // add class to cell
     event.target.classList.add(currentClass);
+    listOfMoves = listOfMoves.slice(0, currentPosition + 1);
     // write move {id : '0', class: 'ch'}
     listOfMoves[currentPosition + 1] = {
       id: event.target.dataset.id,
@@ -69,6 +70,8 @@ function checkUndoAvailable() {
 }
 
 function checkRedoAvailable() {
+  // let currentClassMoves = JSON.parse(
+  //   localStorage.getItem("listOfMoves"));
   if (currentPosition == listOfMoves.length - 1) {
     const redoBtn = document.querySelector(".redo-btn");
     redoBtn.setAttribute("disabled", true);
@@ -85,66 +88,47 @@ function undoRedo(event) {
       currentElementMove.classList.remove(listOfMoves[currentPosition].class);
       currentPosition -= 1;
     } else {
+      // we are at first element
       let currentElementMove = document.querySelector(
         "#c-" + listOfMoves[currentPosition].id
       );
+      // delete this move
       currentElementMove.classList.remove(listOfMoves[currentPosition].class);
       currentPosition = -1;
+      // disable undo btn
       event.target.setAttribute("disabled", true);
     }
-    console.log(currentPosition);
-    console.log(listOfMoves);
   } else {
-    // code to redo moves
-    if (currentPosition == listOfMoves.length - 1) {
-      currentElementMove = document.querySelector(
-        "#c-" + listOfMoves[currentPosition].id
-      );
-      currentElementMove.classList.add(listOfMoves[currentPosition].class);
-      document.querySelector(".redo-btn").setAttribute("disabled", true);
-      currentPosition = listOfMoves.length - 1;
-    } else if (currentPosition == -1) {
-      currentPosition = 0;
-      currentElementMove = document.querySelector(
-        "#c-" + listOfMoves[currentPosition].id
-      );
-      currentElementMove.classList.add(listOfMoves[currentPosition].class);
-    } else {
-      currentPosition += 1;
-      currentElementMove = document.querySelector(
-        "#c-" + listOfMoves[currentPosition].id
-      );
-      // currentElementMove = document.querySelector(
-      //   "#c-" + listOfMoves[currentPosition].id
-      // );
-      currentElementMove.classList.add(listOfMoves[currentPosition].class);
-    }
+    currentPosition += 1;
+    currentElementMove = document.querySelector(
+      "#c-" + listOfMoves[currentPosition].id
+    );
+    currentElementMove.classList.add(listOfMoves[currentPosition].class);
     currentClass = checkMoveClass();
-    // saveMovesToStorage();
-    // saveMovesToStorage();
-    // console.log(currentPosition);
-    // console.log(listOfMoves);
+    saveMovesToStorage();
     checkRedoAvailable();
   }
   currentClass = checkMoveClass();
-  // localStorage.setItem("listOfMoves", JSON.stringify(listOfMoves));
   saveMovesToStorage();
 }
 
 function addListenersToButtons() {
-  const undoBtn = document.querySelector('.undo-btn');
-  const redoBtn = document.querySelector('.redo-btn');
-  const restartBtn = document.querySelector('.restart-btn');
-  undoBtn.addEventListener('click', undoRedo);
-  redoBtn.addEventListener('click', undoRedo);
-  restartBtn.addEventListener('click', restartGame);
+  const undoBtn = document.querySelector(".undo-btn");
+  const redoBtn = document.querySelector(".redo-btn");
+  const restartBtn = document.querySelector(".restart-btn");
+
+  undoBtn.addEventListener("click", undoRedo);
+  redoBtn.addEventListener("click", undoRedo);
+  restartBtn.addEventListener("click", restartGame);
 }
 
 function restartGame() {
   listOfMoves = [];
   currentPosition = -1;
   const cellsList = document.querySelectorAll(".cell");
+  // reset all cells to start positions
   cellsList.forEach(element => (element.className = "cell"));
+  // delete win message
   document.querySelector(".won-title").classList.add("hidden");
   checkMoveClass();
   checkUndoAvailable();
@@ -154,12 +138,15 @@ function restartGame() {
 addListenersToButtons();
 
 function checkWinner(currentClass) {
+  // filter array by class of last move
   let currentClassMoves = JSON.parse(
     localStorage.getItem("listOfMoves")
   ).filter(el => {
     return el.class == currentClass;
   });
-  const winObj = [
+
+  // list of win positions and directions
+  const winPositionsList = [
     { indexes: "012", direction: "horizontal" },
     { indexes: "345", direction: "horizontal" },
     { indexes: "678", direction: "horizontal" },
@@ -169,23 +156,29 @@ function checkWinner(currentClass) {
     { indexes: "048", direction: "diagonal-right" },
     { indexes: "246", direction: "diagonal-left" }
   ];
-  winObj.some(function(element) {
-    let arr = currentClassMoves.filter(function(move) {
+
+  winPositionsList.some(function(element) {
+    let winMoves = currentClassMoves.filter(function(move) {
       return element.indexes.includes(move.id);
     });
-    if (arr.length == element.indexes.length) {
-      showWonMessage(currentClass);
-      checkCellsForWon(arr, element.direction);
+    // there are 3 win moves
+    if (winMoves.length == element.indexes.length) {
+      showGameOverMessage(currentClass);
+      crossOutWinCells(winMoves, element.direction);
       localStorage.clear();
       return true;
-    } else if (arr.length != 3 && listOfMoves.length == 9) {
-      showWonMessage();
+    } else if (
+      winMoves.length != element.indexes.length &&
+      listOfMoves.length == 9
+    ) {
+      // the draw situation
+      showGameOverMessage();
       localStorage.clear();
     }
   });
 }
 
-function showWonMessage(currentClass) {
+function showGameOverMessage(currentClass) {
   document.querySelector(".won-title").classList.remove("hidden");
   let wonMessage = document.querySelector(".won-message");
   switch (currentClass) {
@@ -201,41 +194,39 @@ function showWonMessage(currentClass) {
   }
 }
 
-function checkCellsForWon(arr, direction) {
+function crossOutWinCells(winMoves, direction) {
   let cellsList = document.querySelectorAll(".cell");
-  cellsList.forEach(function(element) {
+  cellsList.forEach(function(cell) {
     if (
-      arr.some(function(el) {
-        return el.id == element.dataset.id;
+      winMoves.some(function(winMove) {
+        return winMove.id == cell.dataset.id;
       })
     ) {
-      element.classList.add("win", direction);
+      cell.classList.add("win", direction);
     }
   });
 }
 
 function saveMovesToStorage() {
   let newListOfMoves = listOfMoves.slice(0, currentPosition + 1);
-  //запишем его в хранилище по ключу "listOfMoves"
   localStorage.setItem("listOfMoves", JSON.stringify(newListOfMoves));
 }
 
-//очищаем все хранилище, когда игра закончилась
-// localStorage.clear()
+function restoreGame() {
+  if (localStorage.getItem("listOfMoves")) {
+    listOfMoves = JSON.parse(localStorage.getItem("listOfMoves"));
+    let cellsList = document.querySelectorAll(".cell");
+
+    for (let i = 0; i < listOfMoves.length; i++) {
+      cellsList.forEach(function(element) {
+        if (element.dataset.id == listOfMoves[i].id) {
+          element.classList.add(listOfMoves[i].class);
+        }
+      });
+    }
+    currentPosition = listOfMoves.length - 1;
+    currentClass = checkMoveClass();
+  }
+}
 
 document.addEventListener("DOMContentLoaded", restoreGame);
-
-function restoreGame() {
-  listOfMoves = JSON.parse(localStorage.getItem("listOfMoves"));
-  let cellsList = document.querySelectorAll(".cell");
-
-  for (let i = 0; i < listOfMoves.length; i++) {
-    cellsList.forEach(function(element) {
-      if (element.dataset.id == listOfMoves[i].id) {
-        element.classList.add(listOfMoves[i].class);
-      }
-    });
-  }
-  currentPosition = listOfMoves.length - 1;
-  currentClass = checkMoveClass();
-}
