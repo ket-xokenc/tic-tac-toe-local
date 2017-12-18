@@ -18,13 +18,13 @@ function addClassToCell(event) {
     currentPosition += 1;
     // save move to localStorage
     saveMovesToStorage();
+    // check available buttons undo, redo
+    checkRedoAvailable();
+    checkUndoAvailable();
     // check current move for win
     checkWinner(currentClass);
     // change class to next
     currentClass = checkMoveClass();
-    // check available buttons undo, redo
-    checkRedoAvailable();
-    checkUndoAvailable();
   }
 }
 
@@ -35,7 +35,7 @@ function checkMoveClass() {
       return element != lastMoveClass;
     })[0];
   } else {
-    // начинаем всегда с крестика
+    // start game with cross
     currentClass = "ch";
   }
   return currentClass;
@@ -70,8 +70,6 @@ function checkUndoAvailable() {
 }
 
 function checkRedoAvailable() {
-  // let currentClassMoves = JSON.parse(
-  //   localStorage.getItem("listOfMoves"));
   if (currentPosition == listOfMoves.length - 1) {
     const redoBtn = document.querySelector(".redo-btn");
     redoBtn.setAttribute("disabled", true);
@@ -185,9 +183,11 @@ function gameOverHandler(currentClass) {
   document.querySelector(".won-title").classList.remove("hidden");
   let wonMessage = document.querySelector(".won-message");
   let field = document.querySelector('.field');
+  field.removeEventListener('click', addClassToCell);
   document.querySelector('.undo-btn').removeEventListener('click', undoRedo);
   document.querySelector('.redo-btn').removeEventListener('click', undoRedo);
-  field.removeEventListener('click', addClassToCell);
+  document.querySelector('.undo-btn').setAttribute('disabled', true);
+  document.querySelector('.redo-btn').setAttribute('disabled', true);
   switch (currentClass) {
     case "ch":
       wonMessage.innerHTML = "Crosses won!";
@@ -199,6 +199,7 @@ function gameOverHandler(currentClass) {
       wonMessage.innerHTML = "It's a draw!";
       break;
   }
+  return;
 }
 
 function crossOutWinCells(winMoves, direction) {
