@@ -123,6 +123,9 @@ function addListenersToButtons() {
 }
 
 function restartGame() {
+  document.querySelector(".field").addEventListener("click", addClassToCell);
+  document.querySelector('.undo-btn').addEventListener('click', undoRedo);
+  document.querySelector('.redo-btn').addEventListener('click', undoRedo);
   listOfMoves = [];
   currentPosition = -1;
   const cellsList = document.querySelectorAll(".cell");
@@ -163,7 +166,7 @@ function checkWinner(currentClass) {
     });
     // there are 3 win moves
     if (winMoves.length == element.indexes.length) {
-      showGameOverMessage(currentClass);
+      gameOverHandler(currentClass);
       crossOutWinCells(winMoves, element.direction);
       localStorage.clear();
       return true;
@@ -172,15 +175,19 @@ function checkWinner(currentClass) {
       listOfMoves.length == 9
     ) {
       // the draw situation
-      showGameOverMessage();
+      gameOverHandler();
       localStorage.clear();
     }
   });
 }
 
-function showGameOverMessage(currentClass) {
+function gameOverHandler(currentClass) {
   document.querySelector(".won-title").classList.remove("hidden");
   let wonMessage = document.querySelector(".won-message");
+  let field = document.querySelector('.field');
+  document.querySelector('.undo-btn').removeEventListener('click', undoRedo);
+  document.querySelector('.redo-btn').removeEventListener('click', undoRedo);
+  field.removeEventListener('click', addClassToCell);
   switch (currentClass) {
     case "ch":
       wonMessage.innerHTML = "Crosses won!";
