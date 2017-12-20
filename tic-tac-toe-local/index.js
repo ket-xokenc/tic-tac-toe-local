@@ -56,11 +56,11 @@ document.querySelector(".redo-btn").addEventListener("click", undoAvailable);
 
 function checkUndoAvailable() {
   const undoBtn = document.querySelector(".undo-btn");
-  switch (listOfMoves.length) {
-    case 0:
+  switch (currentPosition) {
+    case -1:
       undoBtn.setAttribute("disabled", true);
       break;
-    case 9:
+    case 8:
       undoBtn.setAttribute("disabled", true);
       break;
     default:
@@ -70,9 +70,11 @@ function checkUndoAvailable() {
 }
 
 function checkRedoAvailable() {
+  const redoBtn = document.querySelector(".redo-btn");
   if (currentPosition == listOfMoves.length - 1) {
-    const redoBtn = document.querySelector(".redo-btn");
     redoBtn.setAttribute("disabled", true);
+  } else {
+    redoBtn.removeAttribute("disabled");
   }
 }
 
@@ -216,24 +218,26 @@ function crossOutWinCells(winMoves, direction) {
 }
 
 function saveMovesToStorage() {
-  let newListOfMoves = listOfMoves.slice(0, currentPosition + 1);
-  localStorage.setItem("listOfMoves", JSON.stringify(newListOfMoves));
+  localStorage.setItem("listOfMoves", JSON.stringify(listOfMoves));
+  localStorage.setItem('currentPosition', currentPosition);
 }
 
 function restoreGame() {
+  currentPosition = Number(localStorage.getItem('currentPosition'));
   if (localStorage.getItem("listOfMoves")) {
     listOfMoves = JSON.parse(localStorage.getItem("listOfMoves"));
     let cellsList = document.querySelectorAll(".cell");
-
-    for (let i = 0; i < listOfMoves.length; i++) {
+    
+    for (let i = 0; i <= currentPosition; i++) {
       cellsList.forEach(function(element) {
         if (element.dataset.id == listOfMoves[i].id) {
           element.classList.add(listOfMoves[i].class);
         }
       });
     }
-    currentPosition = listOfMoves.length - 1;
     currentClass = checkMoveClass();
+    checkRedoAvailable();
+    checkUndoAvailable();
   }
 }
 
