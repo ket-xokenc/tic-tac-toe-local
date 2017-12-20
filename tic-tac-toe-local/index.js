@@ -8,9 +8,11 @@ let currentPosition = -1;
 function addClassToCell(event) {
   if (event.target.classList.contains("cell")) {
     // add class to cell
+    // debugger;
     event.target.classList.add(currentClass);
     listOfMoves = listOfMoves.slice(0, currentPosition + 1);
     // write move {id : '0', class: 'ch'}
+    // console.log(listOfMoves);
     listOfMoves[currentPosition + 1] = {
       id: event.target.dataset.id,
       class: currentClass
@@ -148,6 +150,9 @@ function checkWinner(currentClass) {
     return el.class == currentClass;
   });
 
+  // console.log( JSON.parse(
+  //     localStorage.getItem("listOfMoves")));
+
   // list of win positions and directions
   const winPositionsList = [
     { indexes: "012", direction: "horizontal" },
@@ -223,7 +228,11 @@ function saveMovesToStorage() {
 }
 
 function restoreGame() {
-  currentPosition = Number(localStorage.getItem('currentPosition'));
+  if( localStorage.getItem('currentPosition')) {
+    currentPosition = Number(localStorage.getItem('currentPosition'));
+  } else {
+    currentPosition = -1;
+  }
   if (localStorage.getItem("listOfMoves")) {
     listOfMoves = JSON.parse(localStorage.getItem("listOfMoves"));
     let cellsList = document.querySelectorAll(".cell");
@@ -238,6 +247,9 @@ function restoreGame() {
     currentClass = checkMoveClass();
     checkRedoAvailable();
     checkUndoAvailable();
+  } else {
+    // console.log(listOfMoves);
+    listOfMoves = [];
   }
 }
 
